@@ -137,7 +137,7 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    if (message.channel.id!=os.getenv("CHAT_CHANNEL")):
+    if (message.channel.id!=int(os.getenv("CHAT_CHANNEL"))):
         return
 
     #print("Gelen Kanal",message.channel.id)

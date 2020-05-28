@@ -1,0 +1,5 @@
+discord.py==1.3.3
+nltk==3.5
+PyDictionary==1.5.2
+python-dotenv==0.13.0
+wordnet==0.0.1b2
