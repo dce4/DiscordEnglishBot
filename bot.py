@@ -8,7 +8,7 @@ import allwords
 import time
 from discord.ext import tasks
 import datetime
-
+import requests
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 client = discord.Client()
@@ -131,6 +131,28 @@ def getSynonyms(word):
     else:
         return "\n**Synonyms of " + word + "**\n"+response
 
+def getUsage():
+    response="""\
+**Usage**
+**!man**    Show usage.
+**!define <word>**    Get information about the word.
+**!ant <word>**    Get antonyms of the word.
+**!syn <word>**    Get synonyms of the word.
+**!exm <word>**    Get an example sentence about the word."""
+    return response
+
+def getExampleSentence(word):
+    url = f"https://wordsapiv1.p.rapidapi.com/words/{word}/examples"
+
+    headers = {
+        'x-rapidapi-host': "wordsapiv1.p.rapidapi.com",
+        'x-rapidapi-key': f"{os.getenv('WORDS_API_KEY')}"
+        }
+
+    response = requests.request("GET", url, headers=headers)
+    return random.choice(response.json()['examples'])
+
+
 @client.event
 async def on_message(message):
     # we do not want the bot to reply to itself
@@ -144,6 +166,10 @@ async def on_message(message):
     msg = message.content
     response = ""
     commands = msg.split(" ")
+    if message.content.startswith('!man'):
+        response = getUsage()
+        await message.channel.send(response)
+        return
     try:
         word = commands[1]
         print(word)
@@ -156,12 +182,16 @@ async def on_message(message):
         response = getMeaning(word)
         await message.channel.send(response)
 
-    if message.content.startswith("!syn"):
+    elif message.content.startswith("!syn"):
         response = getSynonyms(word)
         await message.channel.send(response)
 
-    if message.content.startswith("!ant"):
+    elif message.content.startswith("!ant"):
         response = getAntonyms(word)
+        await message.channel.send(response)
+
+    elif message.content.startswith("!exm"):
+        response = getExampleSentence(word)
         await message.channel.send(response)
 
 @client.event
