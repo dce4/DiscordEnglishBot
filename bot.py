@@ -130,6 +130,16 @@ def getSynonyms(word):
         return "\nWe couldn't find synonyms of that word!"
     else:
         return "\n**Synonyms of " + word + "**\n"+response
+def getUsage():
+    response="""\
+**Usage**
+**!man**    Show usage.
+**!define <word>**    Get information about the word.
+**!ant <word>**    Get antonyms of the word.
+**!syn <word>**    Get synonyms of the word.
+**!exm <word>**    Get an example sentence about the word."""
+    return response
+
 
 @client.event
 async def on_message(message):
@@ -144,6 +154,10 @@ async def on_message(message):
     msg = message.content
     response = ""
     commands = msg.split(" ")
+    if message.content.startswith('!man'):
+        response = getUsage()
+        await message.channel.send(response)
+        return
     try:
         word = commands[1]
         print(word)
