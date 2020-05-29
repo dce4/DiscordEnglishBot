@@ -8,7 +8,7 @@ import allwords
 import time
 from discord.ext import tasks
 import datetime
-
+import requests
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 client = discord.Client()
@@ -130,6 +130,7 @@ def getSynonyms(word):
         return "\nWe couldn't find synonyms of that word!"
     else:
         return "\n**Synonyms of " + word + "**\n"+response
+
 def getUsage():
     response="""\
 **Usage**
@@ -139,6 +140,17 @@ def getUsage():
 **!syn <word>**    Get synonyms of the word.
 **!exm <word>**    Get an example sentence about the word."""
     return response
+
+def getExampleSentence(word):
+    url = f"https://wordsapiv1.p.rapidapi.com/words/{word}/examples"
+
+    headers = {
+        'x-rapidapi-host': "wordsapiv1.p.rapidapi.com",
+        'x-rapidapi-key': f"{os.getenv('WORDS_API_KEY')}"
+        }
+
+    response = requests.request("GET", url, headers=headers)
+    return random.choice(response.json()['examples'])
 
 
 @client.event
@@ -170,12 +182,16 @@ async def on_message(message):
         response = getMeaning(word)
         await message.channel.send(response)
 
-    if message.content.startswith("!syn"):
+    elif message.content.startswith("!syn"):
         response = getSynonyms(word)
         await message.channel.send(response)
 
-    if message.content.startswith("!ant"):
+    elif message.content.startswith("!ant"):
         response = getAntonyms(word)
+        await message.channel.send(response)
+
+    elif message.content.startswith("!exm"):
+        response = getExampleSentence(word)
         await message.channel.send(response)
 
 @client.event
