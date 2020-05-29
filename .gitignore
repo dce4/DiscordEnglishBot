@@ -5,7 +5,7 @@
 ### Python ###
 # Byte-compiled / optimized / DLL files
 .history/
-
+.vscode
 
 __pycache__/
 *.py[cod]
