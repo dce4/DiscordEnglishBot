@@ -178,6 +178,11 @@ async def on_message(message):
         await message.channel.send(response)
         pass
 
+    if word.lower()=="mdisec":
+        response = "**Congratz!! You get secret word of life.** \n**MDISEC** \nThe community of greatness "
+        await message.channel.send(response)
+        return
+
     if message.content.startswith('!define'):
         response = getMeaning(word)
         await message.channel.send(response)
