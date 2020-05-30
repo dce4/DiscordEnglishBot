@@ -24,7 +24,7 @@ async def batch_update():
 	    await sendMessage()
 
 async def sendMessage():
-    channel = client.get_channel(int(os.getenv('CHAT_CHANNEL')))
+    channel = client.get_channel(int(os.getenv('CHANNEL_ID')))
     for nmb in range(0,5):
         ind = random.randint(0,5995)
         response ="``` ** START OF THE WORD ** ```" + getMeaning(allwords.words[ind]) + getAntonyms(allwords.words[ind]) + "\n" + getSynonyms(allwords.words[ind]) + "``` ** END OF THE WORD ** ```"
