@@ -6,33 +6,30 @@ from dotenv import load_dotenv
 import random
 import allwords
 import time
-from discord.ext import tasks
+from discord.ext.tasks import loop
 import datetime
 import requests
+
+
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 client = discord.Client()
 dictionary = PyDictionary()
-
 now = datetime.datetime.now()
 
 
-@tasks.loop(hours =1.0)
+@loop(hours=1)
 async def batch_update():
-    if (now.hour == 9):
-        await sendMessage()
-
+	if (now.hour == 9):
+	    await sendMessage()
 
 async def sendMessage():
-    channel = client.get_channel(int(os.getenv('CHANNEL_ID')))
+    channel = client.get_channel(int(os.getenv('CHAT_CHANNEL')))
     for nmb in range(0,5):
         ind = random.randint(0,5995)
-        response ="``` ```"
-        response += getMeaning(allwords.words[ind])
-        response += getAntonyms(allwords.words[ind])
-        response += getSynonyms(allwords.words[ind])
+        response ="``` ** START OF THE WORD ** ```" + getMeaning(allwords.words[ind]) + getAntonyms(allwords.words[ind]) + "\n" + getSynonyms(allwords.words[ind]) + "``` ** END OF THE WORD ** ```"
         await channel.send(response)
-        time.sleep(6)
+        time.sleep(10)
 
 def getMeaning(word):
     #get definition
@@ -99,7 +96,7 @@ def getAntonyms(words):
         response = "\nWe couldn't find antonyms of that word!"
         return response
     else:
-        response="\n**Antonyms of " + words + "**\n"+response
+        response="\n**Antonyms of " + word + "**\n"+response
         return response
 
 def getSynonyms(word):
@@ -147,10 +144,10 @@ def getExampleSentence(word):
         'x-rapidapi-host': "wordsapiv1.p.rapidapi.com",
         'x-rapidapi-key': f"{os.getenv('WORDS_API_KEY')}"
         }
-
-    response = requests.request("GET", url, headers=headers)
-    return random.choice(response.json()['examples'])
-
+        
+    toparse = requests.request("GET", url, headers=headers)
+    response = "**The example contains  *" + word + "*  is** \n"  + random.choice(toparse.json()['examples'])
+    return response
 
 @client.event
 async def on_message(message):
