@@ -134,7 +134,7 @@ def getSynonyms(word):
 def getUsage():
     response="""\
 **Usage**
-**!man**    Show usage.
+**!maneng**    Show usage.
 **!define <word>**    Get information about the word.
 **!ant <word>**    Get antonyms of the word.
 **!syn <word>**    Get synonyms of the word.
@@ -143,7 +143,6 @@ def getUsage():
 
 def getExampleSentence(word):
     url = f"https://wordsapiv1.p.rapidapi.com/words/{word}/examples"
-
     headers = {
         'x-rapidapi-host': "wordsapiv1.p.rapidapi.com",
         'x-rapidapi-key': f"{os.getenv('WORDS_API_KEY')}"
@@ -166,7 +165,7 @@ async def on_message(message):
     msg = message.content
     response = ""
     commands = msg.split(" ")
-    if message.content.startswith('!man'):
+    if message.content.startswith('!maneng'):
         response = getUsage()
         await message.channel.send(response)
         return
