@@ -134,7 +134,7 @@ def getSynonyms(word):
 def getUsage():
     response="""\
 **Usage**
-**!happy**    Show usage.
+**!maneng**    Show usage.
 **!define <word>**    Get information about the word.
 **!ant <word>**    Get antonyms of the word.
 **!syn <word>**    Get synonyms of the word.
@@ -165,7 +165,7 @@ async def on_message(message):
     msg = message.content
     response = ""
     commands = msg.split(" ")
-    if message.content.startswith('!happy'):
+    if message.content.startswith('!maneng'):
         response = getUsage()
         await message.channel.send(response)
         return
