@@ -178,7 +178,7 @@ async def on_message(message):
         await message.channel.send(response)
         pass
 
-    if word.lower()=="mdisec":
+    if message.content.lower()=="mdisec":
         response = "**Congratz!! You get secret word of life.** \n**MDISEC** \nThe community of greatness "
         await message.channel.send(response)
         return
