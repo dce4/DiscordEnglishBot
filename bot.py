@@ -144,7 +144,7 @@ def getExampleSentence(word):
         'x-rapidapi-host': "wordsapiv1.p.rapidapi.com",
         'x-rapidapi-key': f"{os.getenv('WORDS_API_KEY')}"
         }
-        
+
     toparse = requests.request("GET", url, headers=headers)
     response = "**The example contains  *" + word + "*  is** \n"  + random.choice(toparse.json()['examples'])
     return response
@@ -161,25 +161,29 @@ async def on_message(message):
     #print("Gelen Kanal",message.channel.id)
     msg = message.content
     response = ""
+    avaiable_commands=["!define", "!syn", "!ant", "!exm"]
     commands = msg.split(" ")
     if message.content.startswith('!maneng'):
         response = getUsage()
         await message.channel.send(response)
         return
     try:
+        print(commands[0])
+        if commands[0] not in avaiable_commands:
+            return
         word = commands[1]
         print(word)
     except:
         response = "You forgot to enter a word!"
         await message.channel.send(response)
-        pass
+        return
 
     if word.lower()=="mdisec":
         response = "**Congratz!! You get secret word of life.** \n**MDISEC** \nThe community of greatness "
         await message.channel.send(response)
         return
 
-    if message.content.startswith('!define'):
+    if message.content.startswith("!define"):
         response = getMeaning(word)
         await message.channel.send(response)
 
@@ -198,6 +202,6 @@ async def on_message(message):
 @client.event
 async def on_ready():
     print(f"{client.user} has connected to Discord")
-    batch_update.start()
+    #batch_update.start()
 
 client.run(TOKEN)
