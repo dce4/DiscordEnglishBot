@@ -23,7 +23,7 @@ now = datetime.datetime.now()
 
 @loop(hours=1)
 async def batch_update():
-    if (now.hour == 14):
+    if (now.hour == 9):
         await sendMessage()
 
 async def sendMessage():
