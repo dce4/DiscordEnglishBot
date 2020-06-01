@@ -23,17 +23,16 @@ now = datetime.datetime.now()
 
 @loop(hours=1)
 async def batch_update():
-    if (now.hour == 9):
+    if (now.hour == 14):
         await sendMessage()
 
-
 async def sendMessage():
-    channel = client.get_channel(int(os.getenv('CHANNEL_ID')))
-    for nmb in range(0, 5):
-        ind = random.randint(0, 5995)
-        response = "``` ** START OF THE WORD ** ```" + getMeaning(allwords.words[ind]) + getAntonyms(allwords.words[ind]) + "\n" + getSynonyms(allwords.words[ind]) + "``` ** END OF THE WORD ** ```"
+    channel = client.get_channel(int(os.getenv('CHAT_CHANNEL')))
+    for nmb in range(0,5):
+        ind = random.randint(0,5995)
+        response ="``` ** START OF THE WORD ** ```" + getMeaning(allwords.words[ind]) + getAntonyms(allwords.words[ind]) + "\n" + getSynonyms(allwords.words[ind]) + "``` ** END OF THE WORD ** ```"
         await channel.send(response)
-        time.sleep(10)
+        time.sleep(3)
 
 
 def getMeaning(word):
