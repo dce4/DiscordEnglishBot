@@ -251,12 +251,17 @@ async def play_game(ctx, *args):
     try:
         reaction, user = await client.wait_for('reaction_add', timeout=delay,check=check)
     except asyncio.TimeoutError:
-        msg = await channel.fetch_message( message.id)
+        try:
+            msg = await channel.fetch_message( message.id)
+        except:
+            await ctx.send(f"Hey admins!! Please don't delete messages! \nI don't give u correct answer, huff huff huff 👿!! ")
+            is_running_game=False
+            return
         reaction=None
         i=0
         for ans in ["A","B","C","D"]:
-          reaction=msg.reactions[i]
           try:
+            reaction=msg.reactions[i]
             if reaction.emoji not in emojies.values():
               await ctx.send(f"Please don't send custom emojies, otherwise we will find you! \nI don't give u correct answer, huff huff huff 👿!! ")
               is_running_game=False
@@ -292,6 +297,8 @@ async def on_command_error(ctx, error):
     elif isinstance(error.original, IndexError):  # if command function raise IndexError which mean command send with no word
         await ctx.send("You forgot to enter a word!")
         return
+    global is_running_game
+    is_running_game=False
     raise error
 
 
