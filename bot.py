@@ -222,7 +222,7 @@ async def play_game(ctx, *args):
     if is_running_game:
         return
     is_running_game = True
-    delay = 5.0
+    delay = 15.0
     channel = ctx.channel
     emojies = {"A": '🇦', "B": '🇧', "C": '🇨', "D": '🇩'}
     question = getQuestion()
