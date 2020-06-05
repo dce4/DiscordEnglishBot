@@ -258,7 +258,7 @@ Category: **{categories[str(category_number)]}\n**\
     if len(users_correct) >0:
         await ctx.send(f"Correct answer is {answer_emoji}\n**Users who get correct answer are**")
         await ctx.send(', '.join(users_correct))
-        if args[0]=="isCompitation":
+        if len(args)>0 and args[0]=="isCompitation":
             point=0
             if question["difficulty"]=="easy":
                 point=10
