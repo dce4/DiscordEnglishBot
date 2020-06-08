@@ -160,7 +160,8 @@ def getUsage():
         "**!syn <word>**    Get synonyms of the word.\n"+\
         "**!exm <word>**    Get an example sentence about the word.\n"+\
         "**!play**    Play a game. \n"+\
-        f"**!comp** Start an Competition with **{number_of_questions}** questions"
+        f"**!comp** Start an Competition with **{number_of_questions}** questions \n"+\
+        "**!tte <word>||<sentence>** Convert given input to emoji :-D"
     return response
 
 
@@ -283,6 +284,23 @@ async def play_game(ctx, *args):
         await ctx.send(f"**Opps! Nobody answers correctly**\nCorrect answer is **{answer_emoji}**")
     is_running_game = False
 
+def charToEmoji(ch):
+    ch=ch.lower()
+    if slugify(ch) and slugify(ch) != ch:#if char not in english alphabet
+        ch=slugify(ch)
+    numStr = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+    if '0' <= ch <= '9':
+        offset=ord(ch)-ord('0')# exm : (ascii value of '1') -(ascii value of '0')==1
+        return ":" + numStr[offset] + ":"
+    if 'a' <= ch <= 'z':
+        return ":regional_indicator_" + ch.lower() + ":"
+    special_chars={
+        "?":":grey_question:",
+        "!":":grey_exclamation:",
+        ".":":record_button:"
+    }
+    if ch in special_chars.keys():
+        return special_chars[ch]
 
 @client.check  # global checks for all commands
 async def globally_block_dms(ctx):
@@ -377,6 +395,23 @@ async def text_to_voice(ctx, *, arg):
     await ctx.send(file=discord.File(filename))
     os.remove(filename)
 
+
+@client.command(name="tte")
+async def text_to_emoji(ctx,*args):
+    response=""
+    if len(args) == 0:
+        raise IndexError # user not entered any word
+    for arg in args:
+        emojitified=""
+        for ch in arg:
+            converted=charToEmoji(ch)
+            if converted: # if char is converted
+                emojitified+=" " +converted
+        response+=" "+ emojitified+"     "
+    if len(response.strip()) == 0: # if all of the chars are not converted
+        await ctx.send("Unknown char at line 1!! Segmentation Fault..")
+        return
+    await ctx.send(response)
 
 @client.event
 async def on_command_error(ctx, error):
