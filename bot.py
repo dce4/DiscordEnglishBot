@@ -32,8 +32,6 @@ categories = {"9": "General Knowledge", "10": "Entertainment: Books", "11": "Ent
               "26": "Celebrities", "27": "Animals", "28": "Vehicles", "29": "Entertainment: Comics", "30": "Science: Gadgets",
               "31": "Entertainment: Japanese Anime & Manga", "32": "Entertainment: Cartoon & Animations"}
 
-is_running_game = False
-
 
 @loop(hours=1)
 async def batch_update():
@@ -152,15 +150,15 @@ def getSynonyms(word):
 
 def getUsage():
     response = \
-        "**Usage**\n"+\
-        "**!maneng**    Show usage.\n"+\
-        "**!define <word>**    Get information about the word.\n"+\
-        "**!say <word>||<sentence>**    Say the given input.\n"+\
-        "**!ant <word>**    Get antonyms of the word.\n"+\
-        "**!syn <word>**    Get synonyms of the word.\n"+\
-        "**!exm <word>**    Get an example sentence about the word.\n"+\
-        "**!play**    Play a game. \n"+\
-        f"**!comp** Start an Competition with **{number_of_questions}** questions \n"+\
+        "**Usage**\n" +\
+        "**!maneng**    Show usage.\n" +\
+        "**!define <word>**    Get information about the word.\n" +\
+        "**!say <word>||<sentence>**    Say the given input.\n" +\
+        "**!ant <word>**    Get antonyms of the word.\n" +\
+        "**!syn <word>**    Get synonyms of the word.\n" +\
+        "**!exm <word>**    Get an example sentence about the word.\n" +\
+        "**!play**    Play a game. \n" +\
+        f"**!comp <number>** Start a competition with given number of questions. (Default is 30)\n" +\
         "**!tte <word>||<sentence>** Convert given input to emoji :-D"
     return response
 
@@ -197,28 +195,60 @@ def getQuestion(category_number=18):
     return question
 
 
-async def play_game(ctx, *args):
-    global is_running_game, categories, user_points
+# Play Game helper functions
+is_game_running = None
 
-    if is_running_game:
+
+def stopGame():
+    global is_game_running
+    is_game_running = False
+
+
+def startGame():
+    global is_game_running
+    is_game_running = True
+
+
+def incrementUserPoint(user, difficulty):
+    global user_points
+    point = 0
+    if difficulty == "easy":
+        point = 10
+    elif difficulty == "medium":
+        point = 20
+    elif difficulty == "hard":
+        point = 30
+    if user in user_points.keys():
+        user_points[user] += point
+    else:
+        user_points[user] = point
+
+
+async def play_game(ctx, *args):
+    if is_game_running:
         return
-    is_running_game = True
+    startGame()
     delay = 15.0
     channel = ctx.channel
     emojies = {"A": '🇦', "B": '🇧', "C": '🇨', "D": '🇩'}
     category_number = random.choices(list(range(9, 33)), list([.5/23]*9+[.5]+[.5/23]*14))[0]  # this will distrubute probability so that the number 18 has %50 chance.
     question = getQuestion(category_number)
     if not question:
-        is_running_game = False
+        stopGame()
         return
-    questionString = \
-            f"Category: **{categories[str(category_number)]}\n**"+\
-            f"{question['question']}\n"+\
-            f"**Choose correct answer, you have {delay} seconds to answer**\n"+\
-            f"> {emojies['A']}   {question['A']}\n"+\
-            f"> {emojies['B']}   {question['B']}\n"+\
-            f"> {emojies['C']}   {question['C']}\n"+\
-            f"> {emojies['D']}   {question['D']}\n"
+    questionString = ""
+    if is_competition_running:
+        questionString += f"```Question {current_question}/{number_of_questions}, " +\
+            f"Category: {categories[str(category_number)]}```"
+    else:
+        questionString += f"Category: **{categories[str(category_number)]}**\n"
+    questionString += \
+        f"{question['question']}\n" +\
+        f"**Choose correct answer, you have {delay} seconds to answer**\n" +\
+        f"> {emojies['A']}   {question['A']}\n" +\
+        f"> {emojies['B']}   {question['B']}\n" +\
+        f"> {emojies['C']}   {question['C']}\n" +\
+        f"> {emojies['D']}   {question['D']}\n\n"
 
     message = await channel.send(questionString)
     answer_emoji = ""
@@ -227,7 +257,7 @@ async def play_game(ctx, *args):
         if question["answer"] == key:
             answer_emoji = emo
 
-    def check(reaction, user):
+    def check(reaction, user):  # dummy check function
         return False
     reaction = None
     users_correct = []
@@ -239,7 +269,7 @@ async def play_game(ctx, *args):
             msg = await channel.fetch_message(message.id)
         except:
             await ctx.send(f"Hey admins!! Please don't delete messages! \nI don't give u correct answer, huff huff huff 👿!! ")
-            is_running_game = False
+            stopGame()
             return
         reaction = None
         i = 0
@@ -248,11 +278,11 @@ async def play_game(ctx, *args):
                 reaction = msg.reactions[i]
                 if reaction.emoji not in emojies.values():
                     await ctx.send(f"Please don't send custom emojies, otherwise we will find you! \nI don't give u correct answer, huff huff huff 👿!! ")
-                    is_running_game = False
+                    stopGame()
                     return
             except:
                 await ctx.send(f"Please don't send custom emojies, otherwise we will find you! \nI don't give u correct answer, huff huff huff 👿!! ")
-                is_running_game = False
+                stopGame()
                 return
             i += 1
             async for user in reaction.users():
@@ -264,43 +294,101 @@ async def play_game(ctx, *args):
     for user in users_uncorrect:
         if user in users_correct:
             users_correct.remove(user)
-    if len(users_correct) > 0:
-        await ctx.send(f"Correct answer is {answer_emoji}\n**Users who get correct answer are**")
-        await ctx.send(', '.join(users_correct))
-        if len(args) > 0 and args[0] == "isCompitation":
-            point = 0
-            if question["difficulty"] == "easy":
-                point = 10
-            elif question["difficulty"] == "medium":
-                point = 20
-            elif question["difficulty"] == "hard":
-                point = 30
-            for user in users_correct:
-                if user in user_points.keys():
-                    user_points[user] += point
-                else:
-                    user_points[user] = point
+    if is_game_running:
+        if len(users_correct) > 0:
+            await ctx.send(f"Correct answer is {answer_emoji}\n**Users who get correct answer are**")
+            await ctx.send(', '.join(users_correct))
+            if is_competition_running:
+                for user in users_correct:
+                    incrementUserPoint(user, question["difficulty"])
+        else:
+            await ctx.send(f"**Opps! Nobody answers correctly**\nCorrect answer is **{answer_emoji}**")
+        stopGame()
+
+# Competition helper functions
+number_of_questions = 30
+current_question = 1
+is_competition_running = False
+comp_ctx = None
+user_points = {}
+
+
+def initCompetition(ctx, args):
+    global comp_ctx, number_of_questions, is_competition_running
+    if len(args) != 0 and len(args) > 1:  # if user enter too many arguments
+        return "Too many argument!!"
+    elif len(args) == 1:  # user enters exactly 1 argument.
+        try:
+            n = int(args[0])
+            if not n > 0:
+                return "Number must be greater than 0."
+            elif not n <=30:
+                return "Number must be less than 30."
+            number_of_questions = int(args[0])
+        except ValueError:
+            return "Please enter a number!!"
+        except Exception as e:
+            return f"Unknown error \n{e}"
     else:
-        await ctx.send(f"**Opps! Nobody answers correctly**\nCorrect answer is **{answer_emoji}**")
-    is_running_game = False
+        pass  # The argument numbers are proper
+    comp_ctx = ctx
+    is_competition_running = True
+    return "ok"
+
+
+def resetCompetition():
+    global current_question, is_game_running, user_points, number_of_questions, is_competition_running, comp_ctx
+    user_points = {}
+    stopGame()
+    current_question = 1
+    is_competition_running = False
+    comp_ctx = False
+    number_of_questions = 30
+
+
+def incrementQuestionNumber():
+    global current_question
+    current_question += 1
+
+
+@loop(seconds=20)
+async def competitionLoop():
+    channel = client.get_channel(int(os.getenv('CHANNEL_ID')))
+    await play_game(comp_ctx)
+    incrementQuestionNumber()
+    if current_question > number_of_questions:
+        user_points_temp = sorted(user_points, key=user_points.get, reverse=True)
+        await channel.send("```Competition is finished!```Here the **winner**s are:\n")
+        response = []
+        for user in user_points_temp:
+            response.append(f"{user}:**{user_points[user]}**")
+        if len(response) == 0:
+            await channel.send("||¯\_(ツ)_/¯||")
+        else:
+            await channel.send("||"+('\n'.join(response))+"||")
+        resetCompetition()
+        competitionLoop.stop()
+# TTE helper functions
+
 
 def charToEmoji(ch):
-    ch=ch.lower()
-    if slugify(ch) and slugify(ch) != ch:#if char not in english alphabet
-        ch=slugify(ch)
+    ch = ch.lower()
+    if slugify(ch) and slugify(ch) != ch:  # if char not in english alphabet
+        ch = slugify(ch)
     numStr = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
     if '0' <= ch <= '9':
-        offset=ord(ch)-ord('0')# exm : (ascii value of '1') -(ascii value of '0')==1
+        offset = ord(ch)-ord('0')  # exm : (ascii value of '1') -(ascii value of '0')==1
         return ":" + numStr[offset] + ":"
     if 'a' <= ch <= 'z':
         return ":regional_indicator_" + ch.lower() + ":"
-    special_chars={
-        "?":":grey_question:",
-        "!":":grey_exclamation:",
-        ".":":record_button:"
+    special_chars = {
+        "?": ":grey_question:",
+        "!": ":grey_exclamation:",
+        ".": ":record_button:"
     }
     if ch in special_chars.keys():
         return special_chars[ch]
+
 
 @client.check  # global checks for all commands
 async def globally_block_dms(ctx):
@@ -338,52 +426,33 @@ async def sendExampleSentence(ctx, *args):
 
 @client.command(name="play")
 async def start_game(ctx, *args):
-    global is_running_game
     try:
         await play_game(ctx, *args)
     except:
         await ctx.send("**OPPS!! 404 NOT FOUND!")
-        is_running_game = False
-
-number_of_questions = 30
-current_question = 1
-comp_ctx = None
-user_points = {}
-@loop(seconds=20)
-async def play_update():
-    global current_question, number_of_questions, comp_ctx, is_running_game, user_points
-    channel = client.get_channel(int(os.getenv('CHANNEL_ID')))
-    await play_game(comp_ctx, "isCompitation")
-    current_question += 1
-    if current_question > number_of_questions:
-        user_points_temp = sorted(user_points, key=user_points.get, reverse=True)
-        await channel.send("\nCompetition is finished!\nHere the winners are:\n")
-        response = []
-        for user in user_points_temp:
-            response.append(f"{user}:**{user_points[user]}**")
-        await channel.send("||"+('\n'.join(response))+"||")
-        user_points = {}
-        is_running_game = False
-        current_question = 1
-        play_update.stop()
+        stopGame()
 
 
 @client.command(name="comp")
 async def start_competition(ctx, *args):
-    global comp_ctx
-    comp_ctx = ctx
-    try:
-        play_update.start()
-    except:
-        await ctx.send("Compitation already started")
+    if not is_competition_running:
+        response = initCompetition(ctx, args)
+        if response == "ok":
+            try:
+                competitionLoop.start()
+            except Exception as e:
+                await ctx.send(f"Unknown error {e}")
+                return
+        else:
+            await ctx.send(response)
 
 
 @client.command(name="compstop")
-async def start_competition(ctx, *args):
+async def stop_competition(ctx, *args):
     for role in [x.lower() for x in eval(os.getenv("ADMIN_ROLES"))]:
         if role in [y.name.lower() for y in ctx.author.roles]:
             await ctx.send(f"Competition has ended by {ctx.author.name}")
-            play_update.stop()
+            competitionLoop.stop()
             break
 
 
@@ -397,21 +466,22 @@ async def text_to_voice(ctx, *, arg):
 
 
 @client.command(name="tte")
-async def text_to_emoji(ctx,*args):
-    response=""
+async def text_to_emoji(ctx, *args):
+    response = ""
     if len(args) == 0:
-        raise IndexError # user not entered any word
+        raise IndexError  # user not entered any word
     for arg in args:
-        emojitified=""
+        emojitified = ""
         for ch in arg:
-            converted=charToEmoji(ch)
-            if converted: # if char is converted
-                emojitified+=" " +converted
-        response+=" "+ emojitified+"     "
-    if len(response.strip()) == 0: # if all of the chars are not converted
+            converted = charToEmoji(ch)
+            if converted:  # if char is converted
+                emojitified += " " + converted
+        response += " " + emojitified+"     "
+    if len(response.strip()) == 0:  # if all of the chars are not converted
         await ctx.send("Unknown char at line 1!! Segmentation Fault..")
         return
     await ctx.send(response)
+
 
 @client.event
 async def on_command_error(ctx, error):
@@ -422,8 +492,7 @@ async def on_command_error(ctx, error):
     elif isinstance(error, MissingRequiredArgument) or isinstance(error.original, IndexError):  # if command function raise IndexError which mean command send with no word
         await ctx.send("You forgot to enter a word!")
         return
-    global is_running_game
-    is_running_game = False
+    stopGame()
     raise error
 
 
