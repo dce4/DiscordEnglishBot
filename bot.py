@@ -158,7 +158,7 @@ def getUsage():
         "**!syn <word>**    Get synonyms of the word.\n" +\
         "**!exm <word>**    Get an example sentence about the word.\n" +\
         "**!play**    Play a game. \n" +\
-        f"**!comp** Start an Competition with **{number_of_questions}** questions \n" +\
+        f"**!comp <number>** Start a competition with given number of questions. (Default is 30)\n" +\
         "**!tte <word>||<sentence>** Convert given input to emoji :-D"
     return response
 
@@ -492,7 +492,6 @@ async def on_command_error(ctx, error):
     elif isinstance(error, MissingRequiredArgument) or isinstance(error.original, IndexError):  # if command function raise IndexError which mean command send with no word
         await ctx.send("You forgot to enter a word!")
         return
-    global is_game_running
     stopGame()
     raise error
 
